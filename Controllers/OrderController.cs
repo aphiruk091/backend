@@ -34,7 +34,24 @@ namespace backend.Controllers
                                 }).Where(e => e.Status.Contains("N")).ToListAsync();
             return Ok(result);
         }
-        
+        [HttpGet]
+        [Route("GetOrderStock")]
+        public async Task<IActionResult> GetOrderStock()
+        {
+            var result = await (from order in _context.Orders
+                    join product in _context.Products on order.Product_id equals product.Product_id
+                    join stock in _context.Products on product.Product_id equals stock.Product_id into joinedTable
+                    from data in joinedTable.DefaultIfEmpty()
+                    select new 
+                    {
+                        Order = order,
+                        Product = product,
+                        Stock = data
+                    })
+                    .Where(e => e.Order.Status.Equals("N"))
+                    .ToListAsync();
+            return Ok(result);
+        }
         [HttpPost]
         [Route("AddOrder")]
         public async Task<Order> AddOrder(Order ObjOrder)

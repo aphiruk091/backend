@@ -7,7 +7,8 @@ namespace backend.Models
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
-         public DbSet<OrderProduct> OrderProducts { get; set; }
+        public DbSet<OrderProduct> OrderProducts { get; set; }
+        public DbSet<OrderProductStock> OrderProductStocks { get; set; }
         public OraDbContext(DbContextOptions<OraDbContext> options) : base(options)
         {
 
