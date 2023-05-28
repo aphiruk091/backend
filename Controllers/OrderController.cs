@@ -18,7 +18,7 @@ namespace backend.Controllers
         public async Task<IActionResult> GetOrder()
         {
             var result = await (from Order in _context.Orders
-                                join product in _context.Products on Order.Product_id equals product.Product_id 
+                                join product in _context.Products on Order.Product_id equals product.Product_id
                                 into joinedTable
                                 from data in joinedTable.DefaultIfEmpty()
                                 select new OrderProduct
@@ -29,27 +29,30 @@ namespace backend.Controllers
                                     QTY = Order.QTY,
                                     Status = Order.Status,
                                     Product = data
-                                   
-                                    
+
+
                                 }).Where(e => e.Status.Contains("N")).ToListAsync();
             return Ok(result);
         }
         [HttpGet]
-        [Route("GetOrderStock")]
+        [Route("GetOrderPrice")]
         public async Task<IActionResult> GetOrderStock()
         {
-            var result = await (from order in _context.Orders
-                    join product in _context.Products on order.Product_id equals product.Product_id
-                    join stock in _context.Products on product.Product_id equals stock.Product_id into joinedTable
-                    from data in joinedTable.DefaultIfEmpty()
-                    select new 
-                    {
-                        Order = order,
-                        Product = product,
-                        Stock = data
-                    })
-                    .Where(e => e.Order.Status.Equals("N"))
-                    .ToListAsync();
+            var result = await (from Order in _context.Orders
+                                join product in _context.Products on Order.Product_id equals product.Product_id
+                                into joinedTable
+                                from data in joinedTable.DefaultIfEmpty()
+                                select new OrderProduct
+                                {
+                                    Id = Order.Id,
+                                    Order_id = Order.Order_id,
+                                    Product_id = Order.Product_id,
+                                    QTY = Order.QTY,
+                                    Status = Order.Status,
+                                    Product = data
+
+
+                                }).Where(e => e.Status.Contains("N")).ToListAsync();
             return Ok(result);
         }
         [HttpPost]
@@ -71,6 +74,30 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
             var updatedOrder = _context.Orders.FindAsync(id);
 
+
+            //Cutting Stock
+            Stock objStock = new Stock();
+            var result = await _context.Stocks
+                .Where(s => s.Product_id == objOrder.Product_id)
+                .Select(s => new { s.Inventory, s.Id })
+                .FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                int idStock =  Convert.ToInt32(result.Id);
+                objStock.Id = idStock;
+                objStock.Product_id = objOrder.Product_id;
+                int currentInventory = Convert.ToInt32(result.Inventory);
+                int orderedQuantity = Convert.ToInt32(objOrder.QTY);
+                objStock.Inventory = currentInventory - orderedQuantity;
+            }
+           
+            _context.Entry(objStock).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            var updatedStock = _context.Stocks.Where(e => e.Product_id.Equals(objOrder.Product_id))
+                     .ToListAsync();
+
+
             return NoContent();
         }
         [HttpDelete("{id}")]
@@ -87,5 +114,6 @@ namespace backend.Controllers
 
             return NoContent();
         }
+
     }
 }
