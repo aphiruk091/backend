@@ -84,14 +84,14 @@ namespace backend.Controllers
 
             if (result != null)
             {
-                int idStock =  Convert.ToInt32(result.Id);
+                int idStock = Convert.ToInt32(result.Id);
                 objStock.Id = idStock;
                 objStock.Product_id = objOrder.Product_id;
                 int currentInventory = Convert.ToInt32(result.Inventory);
                 int orderedQuantity = Convert.ToInt32(objOrder.QTY);
                 objStock.Inventory = currentInventory - orderedQuantity;
             }
-           
+
             _context.Entry(objStock).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             var updatedStock = _context.Stocks.Where(e => e.Product_id.Equals(objOrder.Product_id))
